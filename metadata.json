@@ -1,0 +1,5 @@
+{
+  "name": "Marketplace Bulk Master",
+  "description": "A specialized tool to manage, validate, and export Facebook Marketplace bulk upload files with strict template adherence.",
+  "requestFramePermissions": []
+}

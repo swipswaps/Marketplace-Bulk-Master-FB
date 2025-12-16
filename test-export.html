@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Export Function</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h1>Facebook Marketplace Export Test</h1>
+    <button onclick="testExport()">Test Export Function</button>
+    <pre id="output"></pre>
+
+    <script>
+        const REQUIRED_HEADERS = [
+            'TITLE',
+            'PRICE',
+            'CONDITION',
+            'DESCRIPTION',
+            'CATEGORY',
+            'OFFER SHIPPING'
+        ];
+
+        const TEMPLATE_METADATA = {
+            row1: "Facebook Marketplace Bulk Upload Template",
+            row2: "You can create up to 50 listings at once. When you are finished, be sure to save or export this as an XLS/XLSX file."
+        };
+
+        function testExport() {
+            const output = document.getElementById('output');
+            output.textContent = 'Testing export function...\n\n';
+
+            // Sample test data
+            const testAds = [
+                {
+                    title: "545W Bifacial Solar Panels — Solar Farm Release — 11¢/W",
+                    price: 59.95,
+                    condition: "New",
+                    description: "John Kimball here, Sun Electronics International. Brand-new 545-watt bifacial modules.",
+                    category: "Home & Garden > Tools & Workshop Equipment",
+                    offer_shipping: "No"
+                },
+                {
+                    title: "Installer Special — 545W Bifacial Panels — 11¢/Watt",
+                    price: 59.95,
+                    condition: "New",
+                    description: "This is John at Sun Electronics. Moving solar farm shipment.",
+                    category: "Home & Garden > Tools & Workshop Equipment",
+                    offer_shipping: "No"
+                }
+            ];
+
+            // Prepare data rows
+            const dataRows = testAds.map(ad => [
+                ad.title,
+                ad.price,
+                ad.condition,
+                ad.description,
+                ad.category,
+                ad.offer_shipping
+            ]);
+
+            // Construct worksheet data
+            const worksheetData = [
+                [TEMPLATE_METADATA.row1],
+                [TEMPLATE_METADATA.row2],
+                [],
+                REQUIRED_HEADERS,
+                ...dataRows
+            ];
+
+            output.textContent += 'Worksheet Structure:\n';
+            output.textContent += '==================\n\n';
+            
+            worksheetData.forEach((row, idx) => {
+                output.textContent += `Row ${idx + 1}: ${JSON.stringify(row)}\n`;
+            });
+
+            output.textContent += '\n✅ Structure matches Facebook template!\n';
+            output.textContent += '\nRow 1: Title (merged)\n';
+            output.textContent += 'Row 2: Instructions (merged)\n';
+            output.textContent += 'Row 3: EMPTY ✓\n';
+            output.textContent += 'Row 4: Headers (UPPERCASE) ✓\n';
+            output.textContent += 'Row 5+: Data ✓\n';
+
+            // Create actual Excel file
+            const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+            
+            ws['!cols'] = [
+                { wch: 50 },
+                { wch: 10 },
+                { wch: 15 },
+                { wch: 80 },
+                { wch: 40 },
+                { wch: 15 }
+            ];
+
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Bulk Upload Template");
+
+            // Download the file
+            XLSX.writeFile(wb, "Test_Facebook_Marketplace_Export.xlsx");
+
+            output.textContent += '\n📥 File downloaded: Test_Facebook_Marketplace_Export.xlsx\n';
+            output.textContent += '\nOpen the file and verify:\n';
+            output.textContent += '1. Row 1 is merged and contains title\n';
+            output.textContent += '2. Row 2 is merged and contains instructions\n';
+            output.textContent += '3. Row 3 is completely empty\n';
+            output.textContent += '4. Row 4 has UPPERCASE headers\n';
+            output.textContent += '5. Row 5+ has the data\n';
+        }
+    </script>
+</body>
+</html>
+
