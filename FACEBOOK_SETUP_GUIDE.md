@@ -38,7 +38,8 @@
 
 3. **Set Valid OAuth Redirect URIs**
    - Go to: **Facebook Login → Settings**
-   - Add: `https://swipswaps.github.io/Marketplace-Bulk-Master-FB/auth/callback`
+   - Add: `https://swipswaps.github.io/auth/callback`
+   - For local development, also add: `http://localhost:5173/auth/callback`
    - Click "Save Changes"
 
 ---
@@ -69,3 +70,17 @@ npm run dev
 ```
 
 Done! The app will now connect to Facebook.
+
+---
+
+## Troubleshooting
+
+### "Redirect URI Mismatch" Error
+- Make sure you added the EXACT URL: `https://swipswaps.github.io/auth/callback`
+- For local testing: `http://localhost:5173/auth/callback`
+- No trailing slashes!
+
+### "App ID not configured"
+- Check `.env.local` exists in project root
+- Verify `VITE_FACEBOOK_APP_ID=` has your actual App ID
+- Restart dev server after creating `.env.local`
