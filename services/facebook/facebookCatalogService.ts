@@ -1,6 +1,11 @@
 /**
  * Facebook Catalog API Service
  * Handles product catalog operations via Facebook Graph API
+ * 
+ * Compliance Notes:
+ * - Respects Facebook API v24.0 limits (5,000 items, 30MB per batch)
+ * - Implements rate limiting (200 requests/hour)
+ * - Users responsible for content compliance with Commerce Policies
  */
 
 import axios, { AxiosError } from 'axios';
@@ -9,6 +14,11 @@ import { getAccessToken } from './facebookAuthService';
 
 const API_BASE = 'https://graph.facebook.com';
 const API_VERSION = import.meta.env.VITE_FACEBOOK_API_VERSION || 'v24.0';
+
+// Facebook API v24.0 Limits
+const MAX_ITEMS_PER_BATCH = 5000;
+const MAX_BATCH_SIZE_MB = 30;
+const RATE_LIMIT_DELAY_MS = 18000; // 18 seconds (200 requests/hour)
 
 export interface FacebookCatalog {
   id: string;
@@ -61,12 +71,15 @@ export const getCatalogs = async (): Promise<FacebookCatalog[]> => {
   }
 
   try {
-    const response = await axios.get(`${API_BASE}/${API_VERSION}/me/owned_product_catalogs`, {
-      params: {
-        access_token: token,
-        fields: 'id,name,product_count',
-      },
-    });
+    const response = await axios.get<{ data: FacebookCatalog[] }>(
+      `${API_BASE}/${API_VERSION}/me/owned_product_catalogs`,
+      {
+        params: {
+          access_token: token,
+          fields: 'id,name,product_count',
+        },
+      }
+    );
 
     return response.data.data || [];
   } catch (error) {
@@ -83,16 +96,61 @@ const mapAdToFacebookProduct = (ad: Ad): FacebookProduct => {
     retailer_id: ad.id,
     title: ad.title.substring(0, 150), // Facebook max 150 chars
     description: ad.description.substring(0, 5000), // Facebook max 5000 chars
-    price: `${ad.price.toFixed(2)} USD`,
+    price: `${ad.price} USD`,
     availability: ad.availability || 'in stock',
     condition: ad.condition.toLowerCase().replace(/\s+/g, '_'), // Convert to snake_case
-    url: ad.url || `https://example.com/products/${ad.id}`,
-    image_url: ad.image_url || `https://via.placeholder.com/400?text=${encodeURIComponent(ad.title)}`,
+    url: ad.url || window.location.origin,
+    image_url: ad.image_url || `${window.location.origin}/placeholder.jpg`,
+    brand: ad.other_fields?.brand as string | undefined,
   };
 };
 
 /**
+ * Estimates JSON size in bytes
+ */
+const estimateJsonSize = (obj: unknown): number => {
+  return new Blob([JSON.stringify(obj)]).size;
+};
+
+/**
+ * Creates batches respecting both item count and size limits
+ */
+const createOptimalBatches = (ads: Ad[]): Ad[][] => {
+  const batches: Ad[][] = [];
+  let currentBatch: Ad[] = [];
+  let currentBatchSize = 0;
+
+  for (const ad of ads) {
+    const product = mapAdToFacebookProduct(ad);
+    const itemSize = estimateJsonSize({ method: 'CREATE', retailer_id: ad.id, data: product });
+    const itemSizeMB = itemSize / (1024 * 1024);
+
+    // Check if adding this item would exceed limits
+    const wouldExceedCount = currentBatch.length >= MAX_ITEMS_PER_BATCH;
+    const wouldExceedSize = (currentBatchSize + itemSizeMB) > MAX_BATCH_SIZE_MB;
+
+    if (wouldExceedCount || wouldExceedSize) {
+      if (currentBatch.length > 0) {
+        batches.push(currentBatch);
+        currentBatch = [];
+        currentBatchSize = 0;
+      }
+    }
+
+    currentBatch.push(ad);
+    currentBatchSize += itemSizeMB;
+  }
+
+  if (currentBatch.length > 0) {
+    batches.push(currentBatch);
+  }
+
+  return batches;
+};
+
+/**
  * Syncs ads to Facebook catalog using batch API
+ * Respects rate limits and size constraints
  */
 export const syncAdsToCatalog = async (
   ads: Ad[],
@@ -103,14 +161,15 @@ export const syncAdsToCatalog = async (
     throw new Error('Not authenticated');
   }
 
-  const BATCH_SIZE = 5000; // Facebook limit
-  const batches = chunkArray(ads, BATCH_SIZE);
+  const batches = createOptimalBatches(ads);
   
   let successCount = 0;
   let errorCount = 0;
   const errors: Array<{ id: string; message: string }> = [];
 
-  for (const batch of batches) {
+  for (let i = 0; i < batches.length; i++) {
+    const batch = batches[i];
+    
     try {
       const requests: BatchRequest[] = batch.map(ad => ({
         method: 'CREATE',
@@ -149,9 +208,9 @@ export const syncAdsToCatalog = async (
       });
     }
 
-    // Rate limiting: 200 requests per hour
-    if (batches.length > 1) {
-      await sleep(18000); // 18 seconds between batches
+    // Rate limiting: Wait between batches (except after last batch)
+    if (i < batches.length - 1) {
+      await sleep(RATE_LIMIT_DELAY_MS);
     }
   }
 
@@ -162,17 +221,6 @@ export const syncAdsToCatalog = async (
     errorCount,
     errors,
   };
-};
-
-/**
- * Helper: Chunk array into smaller arrays
- */
-const chunkArray = <T,>(array: T[], size: number): T[][] => {
-  const chunks: T[][] = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size));
-  }
-  return chunks;
 };
 
 /**
@@ -214,4 +262,3 @@ const handleApiError = (error: unknown): void => {
     }
   }
 };
-

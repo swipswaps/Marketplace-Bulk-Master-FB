@@ -14,6 +14,7 @@ import AdForm from './components/AdForm';
 import { exportAdsToExcel, parseExcelFile } from './services/excelService';
 import { adRepository } from './services/adRepository';
 import FacebookSyncButton from './components/facebook/FacebookSyncButton';
+import ComplianceNotice from './components/facebook/ComplianceNotice';
 import { SyncResult } from './services/facebook/facebookCatalogService';
 import FacebookSettings from './components/facebook/FacebookSettings';
 
@@ -215,6 +216,7 @@ export default function App() {
               </div>
             </div>
           )}
+          <ComplianceNotice />
 
           {successMessage && (
             <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-md flex items-start gap-3">
