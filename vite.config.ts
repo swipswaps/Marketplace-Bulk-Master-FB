@@ -3,5 +3,5 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/Marketplace-Bulk-Master/',
+  base: '/Marketplace-Bulk-Master-FB/',
 });
