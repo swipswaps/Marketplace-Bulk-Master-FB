@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings, X, CheckCircle, ExternalLink, Rocket, Shield } from 'lucide-react';
+import { Settings, X, CheckCircle, ExternalLink, Rocket, Shield, Scale, Info, AlertTriangle } from 'lucide-react';
 import { isConfigured, getConfigMessage } from '../../services/facebook/facebookAuthService';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 
 export default function FacebookSettings({ onClose, autoOpen = false }: Props) {
   const [showModal, setShowModal] = useState(autoOpen);
+  const [showCompliance, setShowCompliance] = useState(true);
   const configured = isConfigured();
 
   const handleClose = () => {
@@ -59,7 +60,7 @@ export default function FacebookSettings({ onClose, autoOpen = false }: Props) {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Status Card */}
+              {/* Status Card with Integrated Compliance */}
               <div
                 className={`p-4 rounded-lg border-2 ${
                   configured
@@ -80,6 +81,82 @@ export default function FacebookSettings({ onClose, autoOpen = false }: Props) {
                     <p className={`text-sm mt-1 ${configured ? 'text-green-700' : 'text-blue-800'}`}>
                       {configured ? getConfigMessage() : 'Direct sync to Facebook • Real-time validation • Automated inventory'}
                     </p>
+                    
+                    {/* Collapsible Compliance Section */}
+                    {showCompliance && (
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <div className="flex items-start gap-2 mb-2">
+                          <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={16} />
+                          <button
+                            onClick={() => setShowCompliance(false)}
+                            className="text-xs font-semibold text-amber-900 hover:text-amber-700 text-left flex-1"
+                          >
+                            Important: Facebook Commerce Compliance (click to collapse)
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-2 text-xs text-gray-700 ml-5">
+                          {/* Copyright/Trademark */}
+                          <div className="flex items-start gap-2">
+                            <Scale className="flex-shrink-0 mt-0.5" size={12} />
+                            <div>
+                              <strong>Copyright & Trademark:</strong> You are solely responsible for ensuring 
+                              all listings comply with IP laws. No counterfeit/replica items.
+                            </div>
+                          </div>
+
+                          {/* Commerce Policies */}
+                          <div className="flex items-start gap-2">
+                            <Shield className="flex-shrink-0 mt-0.5" size={12} />
+                            <div>
+                              <strong>Commerce Policies:</strong> Must comply with{' '}
+                              <a 
+                                href="https://www.facebook.com/policies_center/commerce" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="underline hover:text-blue-700"
+                              >
+                                Facebook's policies
+                              </a>
+                              . Prohibited: alcohol, tobacco, weapons, adult products.
+                            </div>
+                          </div>
+
+                          {/* API Limits */}
+                          <div className="flex items-start gap-2">
+                            <Info className="flex-shrink-0 mt-0.5" size={12} />
+                            <div>
+                              <strong>API Limits:</strong> 200 req/hr, 5,000 items/batch, 30MB max. 
+                              Large catalogs processed with delays.
+                            </div>
+                          </div>
+
+                          {/* Disclaimer */}
+                          <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-blue-100">
+                            <strong>Disclaimer:</strong> Not affiliated with Meta Platforms, Inc. 
+                            Facebook® is a registered trademark. Use at your own risk.
+                            {' '}
+                            <a
+                              href="https://developers.facebook.com/terms/dfc_platform_terms/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline hover:text-blue-700"
+                            >
+                              Platform Terms
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!showCompliance && (
+                      <button
+                        onClick={() => setShowCompliance(true)}
+                        className="mt-2 text-xs text-amber-700 hover:text-amber-900 underline"
+                      >
+                        Show compliance information
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -120,14 +197,12 @@ export default function FacebookSettings({ onClose, autoOpen = false }: Props) {
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900 mb-2">Configure Redirect URL</h4>
-                          <p className="text-sm text-gray-700 mb-2">
-                            In your Facebook App settings, add this URL:
-                          </p>
-                          <div className="bg-white border border-gray-300 rounded p-3">
-                            <code className="text-sm text-blue-600 break-all">
-                              {window.location.origin}/auth/callback
-                            </code>
+                          <div className="bg-white border border-gray-300 rounded p-2 font-mono text-xs break-all">
+                            {window.location.origin}/auth/callback
                           </div>
+                          <p className="text-xs text-gray-600 mt-2">
+                            Add this to your app's OAuth Redirect URIs in Facebook Login settings
+                          </p>
                         </div>
                       </div>
 
@@ -139,15 +214,12 @@ export default function FacebookSettings({ onClose, autoOpen = false }: Props) {
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900 mb-2">Add Your App ID</h4>
                           <p className="text-sm text-gray-700 mb-2">
-                            Create a file named <code className="bg-gray-200 px-1 rounded">.env.local</code> in your project folder:
+                            Create <code className="bg-gray-200 px-1 rounded">.env.local</code> file:
                           </p>
-                          <div className="bg-gray-900 text-green-400 rounded p-3 font-mono text-sm">
-                            <div>VITE_FACEBOOK_APP_ID=<span className="text-yellow-300">your_app_id_here</span></div>
-                            <div className="text-gray-500">VITE_FACEBOOK_API_VERSION=v24.0</div>
+                          <div className="bg-gray-900 text-green-400 rounded p-3 font-mono text-xs">
+                            VITE_FACEBOOK_APP_ID=your_app_id_here<br />
+                            VITE_FACEBOOK_API_VERSION=v24.0
                           </div>
-                          <p className="text-xs text-gray-600 mt-2">
-                            💡 Find your App ID in the Facebook App dashboard
-                          </p>
                         </div>
                       </div>
 
@@ -159,8 +231,7 @@ export default function FacebookSettings({ onClose, autoOpen = false }: Props) {
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900 mb-2">Restart & Connect</h4>
                           <p className="text-sm text-gray-700">
-                            Restart your dev server (<code className="bg-gray-200 px-1 rounded">npm run dev</code>), 
-                            then click "Connect Facebook" in the header.
+                            Restart your dev server and click the Facebook sync button to authenticate
                           </p>
                         </div>
                       </div>
@@ -183,33 +254,24 @@ export default function FacebookSettings({ onClose, autoOpen = false }: Props) {
                 </>
               )}
 
-              {configured && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-medium text-green-900 mb-2">✅ You're all set!</h4>
-                  <p className="text-sm text-green-800">
-                    Click "Connect Facebook" in the header to authenticate and start syncing your products.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-              <a
-                href="https://developers.facebook.com/docs/marketing-api/catalog"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
-              >
-                View Documentation
-                <ExternalLink size={12} />
-              </a>
-              <button
-                onClick={handleClose}
-                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                {configured ? 'Done' : 'Got it'}
-              </button>
+              {/* Documentation Link */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <a
+                  href="https://developers.facebook.com/docs/marketing-api/catalog"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                >
+                  View Documentation
+                  <ExternalLink size={12} />
+                </a>
+                <button
+                  onClick={handleClose}
+                  className="ml-auto px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+                >
+                  {configured ? 'Close' : 'Got it'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
