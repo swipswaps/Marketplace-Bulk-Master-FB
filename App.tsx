@@ -16,6 +16,8 @@ import { adRepository } from './services/adRepository';
 import FacebookSyncButton from './components/facebook/FacebookSyncButton';
 import { SyncResult } from './services/facebook/facebookCatalogService';
 import FacebookSettings from './components/facebook/FacebookSettings';
+import ConfigurationBanner from './components/facebook/ConfigurationBanner';
+import { isConfigured } from './services/facebook/facebookAuthService';
 
 export default function App() {
   const [ads, setAds] = useState<Ad[]>([]);
@@ -207,6 +209,8 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Configuration Banner - shown when Facebook API is not configured */}
+          {!isConfigured() && <ConfigurationBanner />}
           {error && (
             <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md flex items-start gap-3">
               <AlertTriangle className="text-red-500 mt-0.5" size={20} />

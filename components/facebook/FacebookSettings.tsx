@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { Settings, X, AlertCircle, CheckCircle, ExternalLink } from 'lucide-react';
 import { isConfigured, getConfigMessage } from '../../services/facebook/facebookAuthService';
 
-export default function FacebookSettings() {
+interface Props {
+  onClose?: () => void;
+}
+
+export default function FacebookSettings({ onClose }: Props = {}) {
   const [showModal, setShowModal] = useState(false);
   const configured = isConfigured();
 
@@ -22,7 +26,7 @@ export default function FacebookSettings() {
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">Facebook API Settings</h2>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); onClose?.(); }}
                 className="p-1 hover:bg-gray-100 rounded-md transition-colors"
               >
                 <X size={20} />
@@ -151,7 +155,7 @@ VITE_FACEBOOK_API_VERSION=v24.0`}
 
             <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); onClose?.(); }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               >
                 Close
