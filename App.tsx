@@ -15,6 +15,7 @@ import { exportAdsToExcel, parseExcelFile } from './services/excelService';
 import { adRepository } from './services/adRepository';
 import FacebookSyncButton from './components/facebook/FacebookSyncButton';
 import { SyncResult } from './services/facebook/facebookCatalogService';
+import FacebookSettings from './components/facebook/FacebookSettings';
 
 export default function App() {
   const [ads, setAds] = useState<Ad[]>([]);
@@ -195,8 +196,9 @@ export default function App() {
             </div>
 
             {/* Facebook Sync Button */}
-            <div className="border-l border-gray-300 pl-3">
+            <div className="border-l border-gray-300 pl-3 flex items-center gap-2">
               <FacebookSyncButton ads={ads} onSyncComplete={handleFacebookSyncComplete} />
+              <FacebookSettings />
             </div>
           </div>
         </div>
